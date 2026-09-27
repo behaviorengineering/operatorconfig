@@ -2,7 +2,6 @@ package operatorconfig
 
 import (
 	"errors"
-	"strings"
 	"sync"
 
 	"github.com/zalando/go-keyring"
@@ -29,11 +28,11 @@ func (OSKeyring) Get(service, account string) (string, error) {
 		}
 		return "", err
 	}
-	return v, nil
+	return SanitizeSecret(v), nil
 }
 
 func (OSKeyring) Set(service, account, secret string) error {
-	return keyring.Set(service, account, secret)
+	return keyring.Set(service, account, SanitizeSecret(secret))
 }
 
 func (OSKeyring) Delete(service, account string) error {
@@ -78,7 +77,11 @@ func (m *MemKeyring) Get(service, account string) (string, error) {
 		return "", ErrNotFound
 	}
 	v, ok := m.data[m.key(service, account)]
-	if !ok || strings.TrimSpace(v) == "" {
+	if !ok {
+		return "", ErrNotFound
+	}
+	v = SanitizeSecret(v)
+	if v == "" {
 		return "", ErrNotFound
 	}
 	return v, nil
@@ -88,7 +91,7 @@ func (m *MemKeyring) Set(service, account, secret string) error {
 	if m.data == nil {
 		m.data = make(map[string]string)
 	}
-	m.data[m.key(service, account)] = secret
+	m.data[m.key(service, account)] = SanitizeSecret(secret)
 	return nil
 }
 

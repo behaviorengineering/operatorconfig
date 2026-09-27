@@ -28,6 +28,10 @@ Package: `github.com/behaviorengineering/operatorconfig/pkg/operatorconfig`
 
 CLI: `cmd/export-env` — see [export-env-operator/SKILL.md](../export-env-operator/SKILL.md).
 
+## Secret sanitize (single-line)
+
+**CONSTRAINT:** Secret values MUST be single-line. `SanitizeSecret` (trim space) runs on keyring `Set`, on values loaded from keyring/SOPS, and on process env during `ResolveSecrets` (dirty env is rewritten to the trimmed value). Multiline secrets are not supported.
+
 ## Secret resolve order (locked)
 
 **CONSTRAINT:** `ResolveSecrets` MUST try, in order: process env, keyring for declared names, optional SOPS file when present. MUST NOT add SOPS to `ResolveConfigPath`.
