@@ -19,7 +19,7 @@ Bare invoke (no args) prints the agent guide and exits 0. Human flags: `export-e
 ## Order (locked)
 
 1. Process environment
-2. OS keyring (`Options.App` service, account = env name)
+2. OS keyring (`Options.App` service, account = env name). On Windows, `OSKeyring.Get` decodes Credential Manager blobs stored as UTF-16 LE (Control Panel / cmdkey).
 3. Optional SOPS file (`SecretsEncPath` or `~/.config/<app>/secrets.enc.yaml`)
 
 Declared `secrets:` only. Required secrets fail closed.
