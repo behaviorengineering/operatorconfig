@@ -43,7 +43,14 @@ func resolveSecrets(opts Options, kr Keyring, v *viper.Viper) error {
 		if env == "" {
 			return fmt.Errorf("operatorconfig: secret env name required")
 		}
-		if val := strings.TrimSpace(os.Getenv(env)); val != "" {
+		raw := os.Getenv(env)
+		clean := SanitizeSecret(raw)
+		if clean != "" {
+			if raw != clean {
+				if err := setResolvedSecret(env, clean, v); err != nil {
+					return err
+				}
+			}
 			continue
 		}
 		got, err := kr.Get(service, env)
@@ -52,7 +59,7 @@ func resolveSecrets(opts Options, kr Keyring, v *viper.Viper) error {
 				return fmt.Errorf("operatorconfig: keyring get %q: %w", env, err)
 			}
 		} else {
-			got = strings.TrimSpace(got)
+			got = SanitizeSecret(got)
 			if got != "" {
 				if err := setResolvedSecret(env, got, v); err != nil {
 					return err
@@ -69,7 +76,7 @@ func resolveSecrets(opts Options, kr Keyring, v *viper.Viper) error {
 			sopsLoaded = true
 		}
 		if sopsMap != nil {
-			if val := strings.TrimSpace(sopsMap[env]); val != "" {
+			if val := SanitizeSecret(sopsMap[env]); val != "" {
 				if err := setResolvedSecret(env, val, v); err != nil {
 					return err
 				}
@@ -85,6 +92,7 @@ func resolveSecrets(opts Options, kr Keyring, v *viper.Viper) error {
 }
 
 func setResolvedSecret(env, val string, v *viper.Viper) error {
+	val = SanitizeSecret(val)
 	if err := os.Setenv(env, val); err != nil {
 		return fmt.Errorf("operatorconfig: setenv %q: %w", env, err)
 	}

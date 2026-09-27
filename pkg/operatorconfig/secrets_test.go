@@ -25,6 +25,24 @@ func TestSecretEnvWins(t *testing.T) {
 	}
 }
 
+func TestSecretEnvDirtyRewritten(t *testing.T) {
+	mem := NewMemKeyring()
+	if err := mem.Set("app", "TOKEN", "from-keyring"); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("TOKEN", "envtok\n")
+	opts := Options{
+		App:     "app",
+		Secrets: []Secret{{Env: "TOKEN", Required: true}},
+	}
+	if err := ResolveSecrets(opts, mem); err != nil {
+		t.Fatal(err)
+	}
+	if got := os.Getenv("TOKEN"); got != "envtok" {
+		t.Fatalf("got %q want envtok", got)
+	}
+}
+
 func TestSecretKeyringFillsEnv(t *testing.T) {
 	mem := NewMemKeyring()
 	if err := mem.Set("app", "TOKEN", "ring-token"); err != nil {
