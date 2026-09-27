@@ -28,7 +28,7 @@ func (OSKeyring) Get(service, account string) (string, error) {
 		}
 		return "", err
 	}
-	return SanitizeSecret(v), nil
+	return SanitizeSecret(DecodeWinCredBlob([]byte(v))), nil
 }
 
 func (OSKeyring) Set(service, account, secret string) error {
