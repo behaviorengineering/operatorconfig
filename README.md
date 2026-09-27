@@ -38,3 +38,13 @@ go run ./cmd/export-env --app myapp --secrets API_TOKEN --out .env.deploy
 Bare `export-env` prints the agent operating guide.
 
 See `ai-copilots/skills/operatorconfig/SKILL.md` for operator guidance.
+
+## Releases
+
+Merges to `main` that are not docs/chore/ci-only get an auto patch tag (`vX.Y.Z`) and a source GitHub Release. Pin consumers with:
+
+```bash
+go get github.com/behaviorengineering/operatorconfig@vX.Y.Z
+```
+
+Manual tags `v*` still run the release workflow. Use `[skip release]` in a commit subject to skip auto-patch for that push.
