@@ -16,7 +16,8 @@ description: >-
 Package: `github.com/behaviorengineering/operatorconfig/pkg/operatorconfig`
 
 - `ResolveConfigPath(Options)` — override flag/env, then XDG file, then `ExtraPaths`
-- `Load(Options)` — read YAML when found, expand `${VAR}`, parse top-level `secrets:` when `Options.Secrets` is empty, then `ResolveSecrets`
+- `Load(Options)` — read YAML when found, `ResolveSecrets`, `ApplyEnvDefaults` (`Options.EnvDefaults`), then expand `${VAR}`; parse top-level `secrets:` when `Options.Secrets` is empty
+- `ApplyEnvDefaults([]EnvDefault)` — fill empty process env (static `Value` or `Derive`) before YAML expand; not for secrets
 - `ResolveSecrets(Options, Keyring)` — env, then keyring, then optional SOPS file; `Required` fails closed
 - `SecretsEncPath(Options)` — explicit `SecretsEncPath` or default `~/.config/<app>/secrets.enc.yaml`
 - `WriteDotenv(path, secrets)` — after resolve, write mode `0600` dotenv for Compose
