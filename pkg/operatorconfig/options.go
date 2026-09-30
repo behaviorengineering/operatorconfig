@@ -9,9 +9,10 @@ type Options struct {
 	ExtraPaths     []string // checked after XDG if file missing
 	EnvPrefix      string   // Viper SetEnvPrefix; empty = no prefix
 	Secrets        []Secret
-	SecretsEncPath string     // optional SOPS file; default ~/.config/<app>/secrets.enc.yaml
-	Keyring        Keyring    // when nil, ResolveSecrets uses DefaultKeyring()
-	SecretFile     SecretFile // when nil, ResolveSecrets uses SOPSSecretFile for hop 3
+	EnvDefaults    []EnvDefault // applied after secrets, before YAML ${VAR} expand
+	SecretsEncPath string       // optional SOPS file; default ~/.config/<app>/secrets.enc.yaml
+	Keyring        Keyring      // when nil, ResolveSecrets uses DefaultKeyring()
+	SecretFile     SecretFile   // when nil, ResolveSecrets uses SOPSSecretFile for hop 3
 }
 
 // Secret names a process env var and optional keyring account (same name).

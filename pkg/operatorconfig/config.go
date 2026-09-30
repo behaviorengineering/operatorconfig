@@ -2,7 +2,6 @@ package operatorconfig
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -14,18 +13,20 @@ type Result struct {
 	Viper *viper.Viper
 }
 
-// Load resolves the config path, reads YAML when present, expands ${VAR} in string values,
-// and resolves registered secrets (env then keyring).
+// Load resolves the config path, reads YAML when present, resolves secrets and env defaults,
+// then expands ${VAR} in string values.
 func Load(opts Options) (Result, error) {
 	path, err := ResolveConfigPath(opts)
 	if err != nil {
 		return Result{}, err
 	}
+	resolveOpts := opts
 	if path == "" {
-		if len(opts.Secrets) > 0 {
-			if err := resolveSecrets(opts, nil, nil); err != nil {
-				return Result{}, err
-			}
+		if err := resolveSecrets(resolveOpts, nil, nil); err != nil {
+			return Result{}, err
+		}
+		if err := ApplyEnvDefaults(opts.EnvDefaults); err != nil {
+			return Result{}, err
 		}
 		return Result{Path: "", Viper: nil}, nil
 	}
@@ -40,10 +41,6 @@ func Load(opts Options) (Result, error) {
 	if err := v.ReadInConfig(); err != nil {
 		return Result{}, fmt.Errorf("operatorconfig: read config %s: %w", path, err)
 	}
-	if err := expandViperStrings(v); err != nil {
-		return Result{}, err
-	}
-	resolveOpts := opts
 	if len(resolveOpts.Secrets) == 0 {
 		secrets, err := secretsFromViper(v)
 		if err != nil {
@@ -56,37 +53,11 @@ func Load(opts Options) (Result, error) {
 			return Result{}, err
 		}
 	}
-	return Result{Path: path, Viper: v}, nil
-}
-
-func expandViperStrings(v *viper.Viper) error {
-	for _, key := range v.AllKeys() {
-		switch val := v.Get(key).(type) {
-		case nil:
-			continue
-		case string:
-			v.Set(key, os.Expand(val, os.Getenv))
-		case []interface{}:
-			out := make([]interface{}, len(val))
-			for i, item := range val {
-				if s, ok := item.(string); ok {
-					out[i] = os.Expand(s, os.Getenv)
-				} else {
-					out[i] = item
-				}
-			}
-			v.Set(key, out)
-		case map[string]interface{}:
-			expanded := make(map[string]interface{}, len(val))
-			for k, item := range val {
-				if s, ok := item.(string); ok {
-					expanded[k] = os.Expand(s, os.Getenv)
-				} else {
-					expanded[k] = item
-				}
-			}
-			v.Set(key, expanded)
-		}
+	if err := ApplyEnvDefaults(opts.EnvDefaults); err != nil {
+		return Result{}, err
 	}
-	return nil
+	if err := expandViperStrings(v); err != nil {
+		return Result{}, err
+	}
+	return Result{Path: path, Viper: v}, nil
 }
