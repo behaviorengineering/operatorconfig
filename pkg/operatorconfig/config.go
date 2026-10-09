@@ -27,6 +27,9 @@ func Load(opts Options) (Result, error) {
 				return Result{}, err
 			}
 		}
+		if err := ApplyEnvDefaults(opts); err != nil {
+			return Result{}, err
+		}
 		return Result{Path: "", Viper: nil}, nil
 	}
 	v := viper.New()
@@ -40,9 +43,6 @@ func Load(opts Options) (Result, error) {
 	if err := v.ReadInConfig(); err != nil {
 		return Result{}, fmt.Errorf("operatorconfig: read config %s: %w", path, err)
 	}
-	if err := expandViperStrings(v); err != nil {
-		return Result{}, err
-	}
 	resolveOpts := opts
 	if len(resolveOpts.Secrets) == 0 {
 		secrets, err := secretsFromViper(v)
@@ -55,6 +55,12 @@ func Load(opts Options) (Result, error) {
 		if err := resolveSecrets(resolveOpts, nil, v); err != nil {
 			return Result{}, err
 		}
+	}
+	if err := ApplyEnvDefaults(opts); err != nil {
+		return Result{}, err
+	}
+	if err := expandViperStrings(v); err != nil {
+		return Result{}, err
 	}
 	return Result{Path: path, Viper: v}, nil
 }

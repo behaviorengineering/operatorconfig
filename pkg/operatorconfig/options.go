@@ -10,8 +10,9 @@ type Options struct {
 	EnvPrefix      string   // Viper SetEnvPrefix; empty = no prefix
 	Secrets        []Secret
 	SecretsEncPath string     // optional SOPS file; default ~/.config/<app>/secrets.enc.yaml
-	Keyring        Keyring    // when nil, ResolveSecrets uses DefaultKeyring()
-	SecretFile     SecretFile // when nil, ResolveSecrets uses SOPSSecretFile for hop 3
+	Keyring        Keyring      // when nil, ResolveSecrets uses DefaultKeyring()
+	SecretFile     SecretFile   // when nil, ResolveSecrets uses SOPSSecretFile for hop 3
+	EnvDefaults    []EnvDefault // non-secret env fallbacks after ResolveSecrets, before ${VAR} expand
 }
 
 // Secret names a process env var and optional keyring account (same name).
